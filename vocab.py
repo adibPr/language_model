@@ -29,20 +29,7 @@ class Vocab(object):
 
     def fit(self, texts):
         sentence_token = self._preprocess (texts)
-
-        for sent in sentence_token:
-            for token in sent:
-                if token not in self.reserved:
-                    self.freq[token] = self.freq.get(token, 0) + 1
-
-        if not self.num_words:
-            self.num_words = len(self.freq)
-        # truncate vocab, get most common word
-        top_words = sorted(self.freq.keys(), key=lambda k: self.freq[k], reverse=True)[:self.num_words]
-
-        for word_idx, word in enumerate(top_words):
-            self.itos[word_idx+4] = word  # 4 being the length of reserved token
-            self.stoi[word] = word_idx+4
+        self.fit_token(sentence_token)
 
     def transform(self, texts):
         sentence_token = self._preprocess (texts)
@@ -57,6 +44,21 @@ class Vocab(object):
     def fit_transform(self, texts):
         self.fit(texts)
         return self.transform(texts)
+
+    def fit_token(self, sentence_token):
+        for sent in sentence_token:
+            for token in sent:
+                if token not in self.reserved:
+                    self.freq[token] = self.freq.get(token, 0) + 1
+
+        if not self.num_words:
+            self.num_words = len(self.freq)
+        # truncate vocab, get most common word
+        top_words = sorted(self.freq.keys(), key=lambda k: self.freq[k], reverse=True)[:self.num_words]
+
+        for word_idx, word in enumerate(top_words):
+            self.itos[word_idx+4] = word  # 4 being the length of reserved token
+            self.stoi[word] = word_idx+4
 
     def clear(self):
         self.itos = {}

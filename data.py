@@ -4,6 +4,7 @@ import os
 import re
 import random
 
+import numpy as np
 import torch
 from torch.utils.data import Dataset, DataLoader
 
@@ -14,7 +15,8 @@ from vocab import Vocab
 def load_meditation(
             path=os.path.join (path_this, 'data', 'meditations.mb.txt'),
             split=(0.7, 0.15, 0.15), # training, validation, testing
-            shuffle=True
+            shuffle=True,
+            maxlen=20
         ):
 
     with open (path) as f_:
@@ -33,16 +35,53 @@ def load_meditation(
     # add space between non characters
     lines = [re.sub (r'([\',!\.\?:;/\\-])', r' \1', l.lower(), flags=re.I) for l in lines]
 
-    random.shuffle (lines)
-    idx_train = (0, int (split[0] * len (lines)))
-    idx_val = (idx_train[-1], idx_train[-1] + int (split[1] * len (lines)))
-    idx_test = (idx_val[-1], -1)
+    tot_train, tot_val, tot_test = list(map(lambda i: int(i*len(lines)), split))
+
+    # Train
+    idx_train = (0, tot_train)
+    train = lines[:idx_train[1]]
+    # our goal is to get list of shape (batch_size,max_seq)
+    # we need to tokenize it, cut leftover, convert into 2D array
+    # and the last thing we need is to remapped it into string
+    # so it could be well fed into the NN
+    train = " ".join(train).split()
+    train = np.array(train[:-(len(train)%maxlen)]).reshape(-1, maxlen)
+    train = list(map(lambda tk: " ".join(tk), train.tolist()))
+
+    # Validation
+    idx_val = (tot_train, tot_train+tot_val)
+    val = lines[idx_val[0]:idx_val[1]]
+    val = " ".join(val).split()
+    val = np.array(val[:-(len(val)%maxlen)]).reshape(-1, maxlen)
+    val = list(map(lambda tk: " ".join(tk), val.tolist()))
     
+    # Test
+    idx_test = (tot_train+tot_val, len(lines))
+    test = lines[idx_test[0]:]
+    test = " ".join(test).split()
+    test = np.array(test[:-(len(test)%maxlen)]).reshape(-1, maxlen)
+    test = list(map(lambda tk: " ".join(tk), test.tolist()))
+
+    return (train, val, test)
+
+def load_penntrebank(
+        path=os.path.join (path_this, 'data', 'penn_trebank.train.txt'),
+        split=(0.7, 0.15, 0.15), # training, validation, testing
+    ):
+    with open(path) as f_:
+        lines = f_.read().splitlines()
+
+    # replace <unk> with _unk_
+    lines = [re.sub(r'\<unk\>', '_unk_', l) for l in lines]
+
+    tot_train, tot_val, tot_test = list(map(lambda i: int(i*len(lines)), split))
     return (
-            lines[:idx_train[1]], 
-            lines[idx_val[0]:idx_val[1]], 
-            lines[idx_test[0]:]
-        )
+        lines[:tot_train],
+        lines[tot_train:tot_train+tot_val],
+        lines[-tot_val:]
+    )
+
+        
 
 def pad_sequences(
             sequences, 
