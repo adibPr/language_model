@@ -6,7 +6,7 @@ from torch.nn import functional as F
 class LMLSTM(nn.Module):
 
     def __init__(self, config):
-        super(LMBiLSTM, self).__init__()
+        super(LMLSTM, self).__init__()
 
         # parsing config
         self.config = config

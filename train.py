@@ -3,6 +3,7 @@
 import os
 import sys
 
+import torch
 from torch import nn, optim
 from torch.utils.data import Dataset, DataLoader
 
@@ -22,9 +23,9 @@ config = {
         "num_layers": 1,
 
         # training parameter
-        "batch_size": 100
+        "batch_size": 100,
         "device": "gpu" if torch.cuda.is_available() else "cpu",
-        "epcoh": 5,
+        "epoch": 5,
         "learning_rate": 0.01
 }
 
@@ -45,7 +46,7 @@ test_iterator = DataLoader(test_dataset, batch_size=config['batch_size'])
 
 # initialize model, optim and losses
 model = LMLSTM(config)
-optim = optim.SGD(model.parameter(), lr=config["learning_rate"], momentum=0.9)
+optim = optim.SGD(model.parameters(), lr=config["learning_rate"], momentum=0.9)
 criterion = nn.NLLLoss()
 device = torch.device(config["device"])
 model.to(device)
@@ -77,9 +78,9 @@ for epoch in range(config["epoch"]):
 
         step_loss += loss.item()
 
-        if step%100 = 99:
+        if step%100 == 99:
             print("Epoch {}, step {}, avg loss {:.2F}".format(
                 epoch+1, step+1, step_loss/100
-            )
+            ))
             step_loss = 0
 print("Done")

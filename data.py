@@ -1,10 +1,10 @@
 #!/usr/bin/env python
 
 import os
-import sys
 import re
 import random
 
+import torch
 from torch.utils.data import Dataset, DataLoader
 
 path_this = os.path.abspath (os.path.dirname (__file__))
@@ -100,7 +100,10 @@ class LangModelDataset(Dataset):
 
     def __getitem__(self, idx):
         # return tuple, seq training and its target
-        return (self.data_pad[idx][:-1], self.data_pad[idx][1:])
+        return (
+                torch.tensor(self.data_pad[idx][:-1], dtype=torch.long), 
+                torch.tensor(self.data_pad[idx][1:], dtype=torch.long)
+            )
 
 
 if __name__ == "__main__":
